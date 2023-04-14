@@ -9,9 +9,7 @@ x-log: &logging
 
 services:
   clamav-mirror:
-      <<: *logging  
-      build:
-        context: ./
+      image: shatovilya1996/clamav-mirror:latest
       deploy:
         resources:
           limits:
@@ -30,8 +28,8 @@ services:
           - /etc/timezone:/etc/timezone:ro
           - /etc/localtime:/etc/localtime:ro
 
-  wireguard-client:
-    image: monstrenyatko/wireguard-client
+    wireguard-client:
+    image: lscr.io/linuxserver/wireguard:latest
     container_name: wireguard-client
     restart: unless-stopped
     env_file:
@@ -39,16 +37,13 @@ services:
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-    environment:
-      - WIREGUARD_PORT=1337
+    # environment:
+    #   - WIREGUARD_PORT=1337
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv6.conf.all.disable_ipv6=0
+      # - net.ipv6.conf.all.disable_ipv6=1
     volumes:
-      - wireguard.conf:/etc/wireguard/wg0.conf:ro
+      - ./wireguard.conf:/config/wg0.conf
     ports:
       - 666:80
-
-volumes:
-  data:
