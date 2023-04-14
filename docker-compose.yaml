@@ -1,0 +1,54 @@
+version: '3.7'
+
+x-log: &logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "10"
+
+services:
+  clamav-mirror:
+      <<: *logging  
+      build:
+        context: ./
+      deploy:
+        resources:
+          limits:
+            cpus: '0.4'
+            memory: 1Gb
+          reservations:
+            memory: 100M
+      container_name: clamav-mirror
+      env_file:
+        - ./.env
+      restart: ${RESTART_POLICY}
+      network_mode: "service:wireguard-client"
+      security_opt:
+        - no-new-privileges:true
+      volumes:
+          - /etc/timezone:/etc/timezone:ro
+          - /etc/localtime:/etc/localtime:ro
+
+  wireguard-client:
+    image: monstrenyatko/wireguard-client
+    container_name: wireguard-client
+    restart: unless-stopped
+    env_file:
+      - .env
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - WIREGUARD_PORT=1337
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+    volumes:
+      - wireguard.conf:/etc/wireguard/wg0.conf:ro
+    ports:
+      - 666:80
+
+volumes:
+  data:
